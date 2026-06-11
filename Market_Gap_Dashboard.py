@@ -12,44 +12,41 @@ This interactive dashboard highlights where product categories are masquerading 
 but are secretly loaded with sugar (**Sugar Traps**), and where the actual **Market Goldmines** exist.
 """)
 
-# 2. Load and Map the Dataset
+# 2. Load and Safely Categorize Data
 @st.cache_data
 def load_data():
     df = pd.read_csv('cleaned_market_gap_data.csv')
     
-    # Create a backup column forced to lowercase string for reliable pattern matching
-    df['search_col'] = df['main_category'].astype(str).str.lower()
+    # Create a clean string column for absolute baseline evaluation
+    df['search_clean'] = df['main_category'].astype(str).str.lower().str.strip()
     
-    # ============================================================
-    # DATA ALIGNMENT ENGINE: MAPPING RAW STRINGS TO CLEAN GROUPS
-    # ============================================================
-    def assign_presentation_category(val):
-        if any(x in val for x in ['beverage', 'drink', 'juice', 'soda', 'milk', 'water', 'cocoa']):
+    # Precise routing logic to ensure zero row loss while building uniform display filters
+    def route_to_presentation_group(val):
+        if 'beverage' in val or 'drink' in val or 'juice' in val or 'milk' in val or 'flavor' in val:
             return 'Beverages'
-        elif any(x in val for x in ['asian', 'noodle', 'ready meal', 'meal', 'rice cooked']):
+        elif 'asian' in val or 'ready meal' in val or 'meal' in val or 'pinto' in val:
             return 'Asian Style Ready Meals'
-        elif any(x in val for x in ['snack', 'biscuit', 'cookie', 'confectionery', 'chocolate', 'sweet', 'candy']):
+        elif 'snack' in val or 'biscuit' in val or 'cookie' in val or 'confectionery' in val or 'chocolate' in val:
             return 'Snacks & Confectionery'
-        elif any(x in val for x in ['dairy', 'cheese', 'egg', 'yogurt', 'cream', 'butter']):
+        elif 'dairy' in val or 'egg' in val or 'cheese' in val or 'yogurt' in val:
             return 'Dairy & Eggs'
-        elif any(x in val for x in ['meat', 'fish', 'seafood', 'poultry', 'chicken', 'pork', 'beef']):
+        elif 'meat' in val or 'fish' in val or 'seafood' in val or 'poultry' in val or 'chicken' in val:
             return 'Meats & Seafood'
-        elif any(x in val for x in ['plant-based', 'plant based', 'lentil', 'bean', 'legume', 'veggie', 'tofu']):
+        elif 'plant' in val or 'lentil' in val or 'bean' in val or 'legume' in val or 'tofu' in val:
             return 'Plant-Based Foods'
         else:
             return 'Other Product Categories'
-
-    df['clean_presentation_category'] = df['search_col'].apply(assign_presentation_category)
+            
+    df['presentation_category'] = df['search_clean'].apply(route_to_presentation_group)
     return df
 
 df = load_data()
 
 # ============================================================
-# 3. SIDEBAR FILTERING TOOLS (STRICT CATEGORICAL MAPPING)
+# 3. SIDEBAR FILTERING TOOLS (CLEAN DISPLAY SEGMENTS)
 # ============================================================
 st.sidebar.header("Filter Options")
 
-# Fixed presentation list ensuring clean UI structure
 categories = [
     'All',
     'Beverages',
@@ -63,9 +60,9 @@ categories = [
 
 selected_category = st.sidebar.selectbox("Select Product Category", categories)
 
-# Filter dataset dynamically based on selection
+# Dynamic dataframe partitioning
 if selected_category != 'All':
-    filtered_df = df[df['clean_presentation_category'] == selected_category]
+    filtered_df = df[df['presentation_category'] == selected_category]
 else:
     filtered_df = df
 
