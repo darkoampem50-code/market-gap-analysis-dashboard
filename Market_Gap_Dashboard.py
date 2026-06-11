@@ -131,4 +131,4 @@ st.metric(label="Selected Category Average Nutrient Efficiency Score", value=f"{
 st.markdown("---")
 st.subheader("🔍 Explore the Underlying Products")
 st.markdown("Use this interactive table viewport to inspect individual brand items making up the filtered chart distributions above.")
-st.dataframe(filtered_df[['product_name', 'main_category', 'sugars_100g', 'proteins_100g', 'market_segment']].head(100), use_container_width=True)S
+st.dataframe(filtered_df[['product_name', 'main_category', 'sugars_100g', 'proteins_100g', 'market_segment']].head(100), use_container_width=True)
