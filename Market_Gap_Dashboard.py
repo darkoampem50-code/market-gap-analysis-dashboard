@@ -12,62 +12,45 @@ This interactive dashboard highlights where product categories are masquerading 
 but are secretly loaded with sugar (**Sugar Traps**), and where the actual **Market Goldmines** exist.
 """)
 
-# 2. Load and Safely Categorize Data
+# 2. Load and Force Case Standardization
 @st.cache_data
 def load_data():
     df = pd.read_csv('cleaned_market_gap_data.csv')
-    
-    # Create a clean string column for absolute baseline evaluation
-    df['search_clean'] = df['main_category'].astype(str).str.lower().str.strip()
-    
-    # Precise routing logic to ensure zero row loss while building uniform display filters
-    def route_to_presentation_group(val):
-        if 'beverage' in val or 'drink' in val or 'juice' in val or 'milk' in val or 'flavor' in val:
-            return 'Beverages'
-        elif 'asian' in val or 'ready meal' in val or 'meal' in val or 'pinto' in val:
-            return 'Asian Style Ready Meals'
-        elif 'snack' in val or 'biscuit' in val or 'cookie' in val or 'confectionery' in val or 'chocolate' in val:
-            return 'Snacks & Confectionery'
-        elif 'dairy' in val or 'egg' in val or 'cheese' in val or 'yogurt' in val:
-            return 'Dairy & Eggs'
-        elif 'meat' in val or 'fish' in val or 'seafood' in val or 'poultry' in val or 'chicken' in val:
-            return 'Meats & Seafood'
-        elif 'plant' in val or 'lentil' in val or 'bean' in val or 'legume' in val or 'tofu' in val:
-            return 'Plant-Based Foods'
-        else:
-            return 'Other Product Categories'
-            
-    df['presentation_category'] = df['search_clean'].apply(route_to_presentation_group)
+    # Standardize the target column to string lowercase to prevent casing mismatches completely
+    df['main_category'] = df['main_category'].astype(str).str.lower().str.strip()
     return df
 
 df = load_data()
 
 # ============================================================
-# 3. SIDEBAR FILTERING TOOLS (CLEAN DISPLAY SEGMENTS)
+# 3. SIDEBAR FILTERING TOOLS (REAL DATA DIRECT CORRESPONDENCE)
 # ============================================================
 st.sidebar.header("Filter Options")
 
+# These match your dataset's exact lowercase text entries to eliminate empty plots
 categories = [
     'All',
-    'Beverages',
-    'Asian Style Ready Meals',
-    'Snacks & Confectionery',
-    'Dairy & Eggs',
-    'Meats & Seafood',
-    'Plant-Based Foods',
-    'Other Product Categories'
+    'beverages and beverages preparations',
+    'asian style ready meal',
+    'snacks and confectionery products',
+    'dairy and egg products',
+    'meats and seafood products',
+    'plant-based foods and beverages'
 ]
 
 selected_category = st.sidebar.selectbox("Select Product Category", categories)
 
-# Dynamic dataframe partitioning
+# Filter dataset dynamically based on selection
 if selected_category != 'All':
-    filtered_df = df[df['presentation_category'] == selected_category]
+    filtered_df = df[df['main_category'] == selected_category]
 else:
     filtered_df = df
 
 # 4. KPI Metrics Section (STORY 5)
-st.subheader(f"Market Snapshot: {selected_category}")
+# Display formatted, readable labels on the UI regardless of the selection string casing
+display_title = selected_category.title() if selected_category != 'All' else 'All Categories'
+st.subheader(f"Market Snapshot: {display_title}")
+
 col1, col2, col3 = st.columns(3)
 
 with col1:
@@ -86,17 +69,17 @@ st.markdown("---")
 # ============================================================
 st.subheader("📋 Strategic Executive Summary")
 
-if selected_category == "Asian Style Ready Meals":
+if "asian" in selected_category:
     st.success("""
     **💡 Key Insight & Market Recommendation:**
-    Based on the data, the biggest market opportunity is in **Asian Style Ready Meals**, 
+    Based on the data, the biggest market opportunity is in **asian style ready meal**, 
     specifically targeting products with **>= 10g** of protein and less than **5g** of sugar.
     """)
 else:
     st.info("""
     **💡 Global Insight & Market Recommendation:**
     Based on the macro data, the biggest market opportunity across highly favorable, uncompetitive spaces 
-    is in **Asian Style Ready Meals**, specifically targeting products with **>= 10g** of protein and less than **5g** of sugar.
+    is in **asian style ready meal**, specifically targeting products with **>= 10g** of protein and less than **5g** of sugar.
     """)
 
 # 5. Interactive Dashboard Visualizations (STORIES 1, 2 & 3)
