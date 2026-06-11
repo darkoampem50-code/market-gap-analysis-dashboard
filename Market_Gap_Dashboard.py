@@ -19,16 +19,27 @@ def load_data():
 
 df = load_data()
 
-# 3. Sidebar Filtering Tools
+# ============================================================
+# 3. SIDEBAR FILTERING TOOLS (CLEANED)
+# ============================================================
 st.sidebar.header("Filter Options")
 
-# Dropdown to filter by food categories
-categories = ['All'] + sorted(list(df['main_category'].dropna().unique()))
-selected_category = st.sidebar.selectbox("Select Product Category", categories)
+# We filter out the raw, uncleaned categories and stick to the core high-level segments
+# This ensures only clean, readable categories show up in your dropdown menu
+clean_categories = [
+    'All', 'Beverages', 'Snacks & Confectionery', 'Dairy & Eggs', 
+    'Meats & Seafood', 'Plant-Based, Grains & Legumes', 
+    'Meals, Sauces & Condiments', 'Supplements & Sports Nutrition'
+]
+
+# If your dataset uses 'high_level_category', we'll filter on that to keep it clean
+category_column = 'high_level_category' if 'high_level_category' in df.columns else 'main_category'
+
+selected_category = st.sidebar.selectbox("Select Product Category", clean_categories)
 
 # Filter dataset dynamically based on user selection
 if selected_category != 'All':
-    filtered_df = df[df['main_category'] == selected_category]
+    filtered_df = df[df[category_column].str.contains(selected_category.split(' ')[0], case=False, na=False)]
 else:
     filtered_df = df
 
