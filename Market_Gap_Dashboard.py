@@ -21,20 +21,25 @@ def load_data():
 df = load_data()
 
 # ============================================================
-# 3. SIDEBAR FILTERING TOOLS (RESTORED & CLEANED)
+# 3. SIDEBAR FILTERING TOOLS (EXACT MATCH RESTORATION)
 # ============================================================
 st.sidebar.header("Filter Options")
 
-# 1. Dynamically grab the unique category names from your database
-raw_categories = df['main_category'].dropna().unique().tolist()
+# We manually list the exact clean categories you want to present
+# This completely eliminates unwanted data rows and keeps it simple
+categories = [
+    'All',
+    'beverages and beverages preparations',
+    'asian style ready meal'
+]
 
-# 2. Smart Clean: Keep original English categories (like "asian style ready meal") 
-# but filter out any rows containing foreign languages or uncleaned character numbers
-clean_categories_list = []
-for cat in raw_categories:
-    # Only keep it if it contains regular letters and spaces (removes weird uncleaned text)
-    if re.match(r'^[a-zA-Z\s\-\&\,\’]+$', str(cat)):
-        clean_categories_list.append(cat)
+selected_category = st.sidebar.selectbox("Select Product Category", categories)
+
+# Filter dataset dynamically based on user selection
+if selected_category != 'All':
+    filtered_df = df[df['main_category'] == selected_category]
+else:
+    filtered_df = df
 
 # 3. Sort them alphabetically so it's clean for your presentation
 categories = ['All'] + sorted(clean_categories_list)
