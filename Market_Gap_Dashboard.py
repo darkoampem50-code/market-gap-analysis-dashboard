@@ -20,20 +20,19 @@ def load_data():
 df = load_data()
 
 # ============================================================
-# 3. SIDEBAR FILTERING TOOLS (YOUR EXACT PRESENTATION CATEGORIES)
+# 3. SIDEBAR FILTERING TOOLS (EXACT MATCH CORRECTED)
 # ============================================================
 st.sidebar.header("Filter Options")
 
-# These are the exact presentation-ready categories from your clean dataset.
-# No extra noise, no foreign languages—just your core presentation segments.
+# Capitalized properly to match your exact dataset entries perfectly
 categories = [
     'All',
     'beverages and beverages preparations',
     'asian style ready meal',
-    'snacks and confectionery products',
-    'dairy and egg products',
-    'meats and seafood products',
-    'plant-based foods and beverages'
+    'Snacks and confectionery products',
+    'Dairy and egg products',
+    'Meats and seafood products',
+    'Plant-based foods and beverages'
 ]
 
 selected_category = st.sidebar.selectbox("Select Product Category", categories)
