@@ -20,29 +20,31 @@ def load_data():
 df = load_data()
 
 # ============================================================
-# 3. SIDEBAR FILTERING TOOLS (CLEANED)
+# 3. SIDEBAR FILTERING TOOLS (RESTORED & CLEANED)
 # ============================================================
 st.sidebar.header("Filter Options")
 
-# We filter out the raw, uncleaned categories and stick to the core high-level segments
-# This ensures only clean, readable categories show up in your dropdown menu
-clean_categories = [
-    'All', 'Beverages', 'Snacks & Confectionery', 'Dairy & Eggs', 
-    'Meats & Seafood', 'Plant-Based, Grains & Legumes', 
-    'Meals, Sauces & Condiments', 'Supplements & Sports Nutrition'
-]
+# 1. Dynamically grab the unique category names from your database
+raw_categories = df['main_category'].dropna().unique().tolist()
 
-# If your dataset uses 'high_level_category', we'll filter on that to keep it clean
-category_column = 'high_level_category' if 'high_level_category' in df.columns else 'main_category'
+# 2. Smart Clean: Keep original English categories (like "asian style ready meal") 
+# but filter out any rows containing foreign languages or uncleaned character numbers
+clean_categories_list = []
+for cat in raw_categories:
+    # Only keep it if it contains regular letters and spaces (removes weird uncleaned text)
+    if re.match(r'^[a-zA-Z\s\-\&\,\’]+$', str(cat)):
+        clean_categories_list.append(cat)
 
-selected_category = st.sidebar.selectbox("Select Product Category", clean_categories)
+# 3. Sort them alphabetically so it's clean for your presentation
+categories = ['All'] + sorted(clean_categories_list)
+
+selected_category = st.sidebar.selectbox("Select Product Category", categories)
 
 # Filter dataset dynamically based on user selection
 if selected_category != 'All':
-    filtered_df = df[df[category_column].str.contains(selected_category.split(' ')[0], case=False, na=False)]
+    filtered_df = df[df['main_category'] == selected_category]
 else:
     filtered_df = df
-
 # 4. KPI Metrics Section (STORY 5)
 st.subheader(f"Market Snapshot: {selected_category}")
 col1, col2, col3 = st.columns(3)
