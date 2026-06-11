@@ -15,35 +15,26 @@ but are secretly loaded with sugar (**Sugar Traps**), and where the actual **Mar
 # 2. Load the Cleaned Data
 @st.cache_data
 def load_data():
-    df = pd.read_csv('cleaned_market_gap_data.csv')
-    # Clean string spaces to prevent duplication mismatches
-    df['main_category'] = df['main_category'].astype(str).str.strip()
-    return df
+    return pd.read_csv('cleaned_market_gap_data.csv')
 
 df = load_data()
 
 # ============================================================
-# 3. SIDEBAR FILTERING TOOLS (AUTOMATIC BACKEND EXTRACTION)
+# 3. SIDEBAR FILTERING TOOLS (EXACT MATCH FIXED)
 # ============================================================
 st.sidebar.header("Filter Options")
 
-# Dynamically pull the exact unique categories that exist inside your file
-raw_categories = df['main_category'].dropna().unique().tolist()
+# These are the exact text entries used in your dataset's main_category column.
+categories = [
+    'All',
+    'beverages and beverages preparations',
+    'asian style ready meal',
+    'Snacks and confectionery products',
+    'Dairy and egg products',
+    'Meats and seafood products',
+    'Plant-based foods and beverages'
+]
 
-# Define presentation filter groups you want to display
-display_categories = []
-for cat in raw_categories:
-    cat_lower = cat.lower()
-    # Filter out empty entries, systems codes, or long ingredient lines
-    if cat_lower in ['nan', ''] or len(cat) > 40:
-        continue
-    # Keep your essential presentation subjects
-    if any(k in cat_lower for k in ['beverage', 'snack', 'dairy', 'meat', 'plant', 'asian', 'meal', 'sauce', 'supplement']):
-        if cat not in display_categories:
-            display_categories.append(cat)
-
-# Sort them cleanly and keep 'All' at the absolute top
-categories = ['All'] + sorted(display_categories)
 selected_category = st.sidebar.selectbox("Select Product Category", categories)
 
 # Filter dataset dynamically based on user selection
@@ -72,7 +63,7 @@ st.markdown("---")
 # ============================================================
 st.subheader("📋 Strategic Executive Summary")
 
-if "asian style" in str(selected_category).lower():
+if selected_category == "asian style ready meal":
     st.success("""
     **💡 Key Insight & Market Recommendation:**
     Based on the data, the biggest market opportunity is in **asian style ready meal**, 
@@ -95,9 +86,9 @@ with left_chart:
     if not filtered_df.empty:
         hb = ax.hexbin(filtered_df['sugars_100g'], filtered_df['proteins_100g'], gridsize=25, cmap='YlOrRd', mincnt=1)
         fig.colorbar(hb, ax=ax, label='Product Count')
-    
     ax.set_xlabel('Sugars per 100g')
     ax.set_ylabel('Proteins per 100g')
+    
     ax.axvline(15, color='red', linestyle='--', alpha=0.6)
     ax.axhline(10, color='green', linestyle='--', alpha=0.6)
     st.pyplot(fig)
@@ -152,4 +143,7 @@ st.metric(label="Selected Category Average Nutrient Efficiency Score", value=f"{
 st.markdown("---")
 st.subheader("🔍 Explore the Underlying Products")
 st.markdown("Use this interactive table viewport to inspect individual brand items making up the filtered chart distributions above.")
-st.dataframe(filtered_df[['product_name', 'main_category', 'sugars_100g', 'proteins_100g', 'market_segment']].head(100), use_container_width=True)
+if not filtered_df.empty:
+    st.dataframe(filtered_df[['product_name', 'main_category', 'sugars_100g', 'proteins_100g', 'market_segment']].head(100), use_container_width=True)
+else:
+    st.write("No product data available for this selection.")
