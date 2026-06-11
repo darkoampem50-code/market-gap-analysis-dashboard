@@ -12,45 +12,54 @@ This interactive dashboard highlights where product categories are masquerading 
 but are secretly loaded with sugar (**Sugar Traps**), and where the actual **Market Goldmines** exist.
 """)
 
-# 2. Load and Force Case Standardization
+# 2. Load the Cleaned Data Safely
 @st.cache_data
 def load_data():
     df = pd.read_csv('cleaned_market_gap_data.csv')
-    # Standardize the target column to string lowercase to prevent casing mismatches completely
-    df['main_category'] = df['main_category'].astype(str).str.lower().str.strip()
+    # Fill missing values and force to lowercase string for bulletproof matching
+    df['main_category'] = df['main_category'].fillna('').astype(str).str.lower()
     return df
 
 df = load_data()
 
 # ============================================================
-# 3. SIDEBAR FILTERING TOOLS (REAL DATA DIRECT CORRESPONDENCE)
+# 3. SIDEBAR FILTERING TOOLS (SUBSTRING ENGINE)
 # ============================================================
 st.sidebar.header("Filter Options")
 
-# These match your dataset's exact lowercase text entries to eliminate empty plots
+# User-friendly presentation names
 categories = [
     'All',
-    'beverages and beverages preparations',
-    'asian style ready meal',
-    'snacks and confectionery products',
-    'dairy and egg products',
-    'meats and seafood products',
-    'plant-based foods and beverages'
+    'Beverages',
+    'Asian Style Ready Meals',
+    'Snacks & Confectionery',
+    'Dairy & Egg Products',
+    'Meats & Seafood',
+    'Plant-Based Foods'
 ]
 
 selected_category = st.sidebar.selectbox("Select Product Category", categories)
 
-# Filter dataset dynamically based on selection
-if selected_category != 'All':
-    filtered_df = df[df['main_category'] == selected_category]
+# Dynamic filtering based on flexible keyword matching to eliminate 0-count errors
+if selected_category == 'All':
+    filtered_df = df
+elif selected_category == 'Beverages':
+    filtered_df = df[df['main_category'].str.contains('beverage|drink|juice|milk', regex=True)]
+elif selected_category == 'Asian Style Ready Meals':
+    filtered_df = df[df['main_category'].str.contains('asian|ready meal|meal|noodle', regex=True)]
+elif selected_category == 'Snacks & Confectionery':
+    filtered_df = df[df['main_category'].str.contains('snack|confectionery|biscuit|cookie|chocolate', regex=True)]
+elif selected_category == 'Dairy & Egg Products':
+    filtered_df = df[df['main_category'].str.contains('dairy|egg|cheese|yogurt', regex=True)]
+elif selected_category == 'Meats & Seafood':
+    filtered_df = df[df['main_category'].str.contains('meat|seafood|fish|poultry|chicken', regex=True)]
+elif selected_category == 'Plant-Based Foods':
+    filtered_df = df[df['main_category'].str.contains('plant|lentil|bean|legume|tofu', regex=True)]
 else:
     filtered_df = df
 
 # 4. KPI Metrics Section (STORY 5)
-# Display formatted, readable labels on the UI regardless of the selection string casing
-display_title = selected_category.title() if selected_category != 'All' else 'All Categories'
-st.subheader(f"Market Snapshot: {display_title}")
-
+st.subheader(f"Market Snapshot: {selected_category}")
 col1, col2, col3 = st.columns(3)
 
 with col1:
@@ -69,17 +78,17 @@ st.markdown("---")
 # ============================================================
 st.subheader("📋 Strategic Executive Summary")
 
-if "asian" in selected_category:
+if selected_category == "Asian Style Ready Meals":
     st.success("""
     **💡 Key Insight & Market Recommendation:**
-    Based on the data, the biggest market opportunity is in **asian style ready meal**, 
+    Based on the data, the biggest market opportunity is in **Asian Style Ready Meals**, 
     specifically targeting products with **>= 10g** of protein and less than **5g** of sugar.
     """)
 else:
     st.info("""
     **💡 Global Insight & Market Recommendation:**
     Based on the macro data, the biggest market opportunity across highly favorable, uncompetitive spaces 
-    is in **asian style ready meal**, specifically targeting products with **>= 10g** of protein and less than **5g** of sugar.
+    is in **Asian Style Ready Meals**, specifically targeting products with **>= 10g** of protein and less than **5g** of sugar.
     """)
 
 # 5. Interactive Dashboard Visualizations (STORIES 1, 2 & 3)
