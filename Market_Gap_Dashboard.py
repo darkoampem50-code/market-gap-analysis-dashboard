@@ -20,31 +20,40 @@ def load_data():
 df = load_data()
 
 # ============================================================
-# 3. SIDEBAR FILTERING TOOLS (AUTOMATIC COMPATIBILITY)
+# 3. SIDEBAR FILTERING TOOLS (MACRO GROUPS RESTORED)
 # ============================================================
 st.sidebar.header("Filter Options")
 
-# We dynamically pull the exact categories directly from your dataset 
-# so there is zero chance of a spelling or capitalization mismatch.
-raw_categories = df['main_category'].dropna().unique().tolist()
-
-# Define the target categories you care about for your presentation
-target_keywords = ['beverages', 'asian style', 'snacks', 'dairy', 'meats', 'plant-based']
-
-# Filter the dataset's categories automatically based on your presentation needs
-presentation_categories = []
-for cat in raw_categories:
-    if any(keyword in str(cat).lower() for keyword in target_keywords):
-        presentation_categories.append(cat)
-
-# Sort them cleanly and add 'All' to the top
-categories = ['All'] + sorted(presentation_categories)
+# We manually structure the exact presentation categories to ensure they pull the full groups
+categories = [
+    'All',
+    'Beverages',
+    'Snacks & Confectionery',
+    'Dairy & Eggs',
+    'Meats & Seafood',
+    'Plant-Based Foods',
+    'Asian Style Ready Meals'
+]
 
 selected_category = st.sidebar.selectbox("Select Product Category", categories)
 
-# Filter dataset dynamically based on user selection
+# Map selections back to the broad macro groups in your dataset
 if selected_category != 'All':
-    filtered_df = df[df['main_category'] == selected_category]
+    if selected_category == 'Beverages':
+        # Safely checks both 'beverages' text variations to capture all 1,544+ items
+        filtered_df = df[df['main_category'].str.contains('beverage|drink', case=False, na=False)]
+    elif selected_category == 'Asian Style Ready Meals':
+        filtered_df = df[df['main_category'].str.contains('asian|ready meal', case=False, na=False)]
+    elif selected_category == 'Snacks & Confectionery':
+        filtered_df = df[df['main_category'].str.contains('snack|confectionery|biscuit|cookie|sweet', case=False, na=False)]
+    elif selected_category == 'Dairy & Eggs':
+        filtered_df = df[df['main_category'].str.contains('dairy|milk|cheese|egg|yogurt', case=False, na=False)]
+    elif selected_category == 'Meats & Seafood':
+        filtered_df = df[df['main_category'].str.contains('meat|fish|seafood|chicken|beef', case=False, na=False)]
+    elif selected_category == 'Plant-Based Foods':
+        filtered_df = df[df['main_category'].str.contains('plant|lentil|bean|veggie|vegetarian', case=False, na=False)]
+    else:
+        filtered_df = df
 else:
     filtered_df = df
 
@@ -68,17 +77,17 @@ st.markdown("---")
 # ============================================================
 st.subheader("📋 Strategic Executive Summary")
 
-if "asian style" in str(selected_category).lower():
+if selected_category == "Asian Style Ready Meals":
     st.success("""
     **💡 Key Insight & Market Recommendation:**
-    Based on the data, the biggest market opportunity is in **asian style ready meal**, 
+    Based on the data, the biggest market opportunity is in **Asian Style Ready Meals**, 
     specifically targeting products with **>= 10g** of protein and less than **5g** of sugar.
     """)
 else:
     st.info("""
     **💡 Global Insight & Market Recommendation:**
     Based on the macro data, the biggest market opportunity across highly favorable, uncompetitive spaces 
-    is in **asian style ready meal**, specifically targeting products with **>= 10g** of protein and less than **5g** of sugar.
+    is in **Asian Style Ready Meals**, specifically targeting products with **>= 10g** of protein and less than **5g** of sugar.
     """)
 
 # 5. Interactive Dashboard Visualizations (STORIES 1, 2 & 3)
@@ -88,14 +97,14 @@ with left_chart:
     st.subheader("The Positioning Matrix (Sugar vs. Protein Density)")
     fig, ax = plt.subplots(figsize=(8, 6))
     
-    hb = ax.hexbin(filtered_df['sugars_100g'], filtered_df['proteins_100g'], gridsize=25, cmap='YlOrRd', mincnt=1)
+    if not filtered_df.empty:
+        hb = ax.hexbin(filtered_df['sugars_100g'], filtered_df['proteins_100g'], gridsize=25, cmap='YlOrRd', mincnt=1)
+        fig.colorbar(hb, ax=ax, label='Product Count')
     ax.set_xlabel('Sugars per 100g')
     ax.set_ylabel('Proteins per 100g')
     
     ax.axvline(15, color='red', linestyle='--', alpha=0.6)
     ax.axhline(10, color='green', linestyle='--', alpha=0.6)
-    
-    fig.colorbar(hb, ax=ax, label='Product Count')
     st.pyplot(fig)
 
 with right_chart:
