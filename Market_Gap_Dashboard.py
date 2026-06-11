@@ -20,43 +20,31 @@ def load_data():
 df = load_data()
 
 # ============================================================
-# 3. SIDEBAR FILTERING TOOLS (EXACT MATCH CORRECTED)
+# 3. SIDEBAR FILTERING TOOLS (CASE-INSENSITIVE SMART MATCH)
 # ============================================================
 st.sidebar.header("Filter Options")
 
-# Capitalized properly to match your exact dataset entries perfectly
+# These are your core presentation-ready options
 categories = [
     'All',
     'beverages and beverages preparations',
     'asian style ready meal',
-    'Snacks and confectionery products',
-    'Dairy and egg products',
-    'Meats and seafood products',
-    'Plant-based foods and beverages'
+    'snacks and confectionery products',
+    'dairy and egg products',
+    'meats and seafood products',
+    'plant-based foods and beverages'
 ]
 
 selected_category = st.sidebar.selectbox("Select Product Category", categories)
 
-# Filter dataset dynamically based on user selection
+# Filter dataset dynamically using a case-insensitive keyword match
 if selected_category != 'All':
-    filtered_df = df[df['main_category'] == selected_category]
+    # We take the first two words of your selection (e.g., 'dairy and' or 'asian style')
+    # and search for that text inside the dataset, ignoring capital letters completely.
+    search_keyword = " ".join(selected_category.split()[:2])
+    filtered_df = df[df['main_category'].str.lower().str.contains(search_keyword, na=False)]
 else:
     filtered_df = df
-
-# 4. KPI Metrics Section (STORY 5)
-st.subheader(f"Market Snapshot: {selected_category}")
-col1, col2, col3 = st.columns(3)
-
-with col1:
-    st.metric("Total Products Analyzed", f"{filtered_df.shape[0]:,}")
-with col2:
-    traps_count = filtered_df[filtered_df['market_segment'] == 'Sugar Trap (High Protein, High Sugar)'].shape[0]
-    st.metric("Identified Sugar Traps 🚨", f"{traps_count:,}")
-with col3:
-    goldmine_count = filtered_df[filtered_df['market_segment'] == 'The Market Goldmine (Low Sugar, High Protein)'].shape[0]
-    st.metric("Market Goldmines ✨", f"{goldmine_count:,}")
-
-st.markdown("---")
 
 # ============================================================
 # STORY 4: THE STRATEGIC RECOMMENDATION (KEY INSIGHT BOX)
