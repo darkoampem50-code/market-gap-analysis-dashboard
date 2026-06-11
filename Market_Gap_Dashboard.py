@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+import re
 
 # 1. Page Layout Configuration
 st.set_page_config(page_title="The Market Gap Analysis", layout="wide")
@@ -20,16 +21,23 @@ def load_data():
 df = load_data()
 
 # ============================================================
-# 3. SIDEBAR FILTERING TOOLS (EXACT MATCH RESTORATION)
+# 3. SIDEBAR FILTERING TOOLS (THE FULL CLEAN CATEGORY LIST)
 # ============================================================
 st.sidebar.header("Filter Options")
 
-# We manually list the exact clean categories you want to present
-categories = [
-    'All',
-    'beverages and beverages preparations',
-    'asian style ready meal'
-]
+# Pull every single unique category from your database
+raw_categories = df['main_category'].dropna().unique().tolist()
+
+# Keep ALL clean categories (including Asian meals, beverages, etc.) 
+# but filter out rows containing foreign text, numbers, or uncleaned symbols
+clean_categories_list = []
+for cat in raw_categories:
+    # This matches standard English letters, spaces, hyphens, and ampersands
+    if re.match(r'^[a-zA-Z\s\-\&\,\’]+$', str(cat)):
+        clean_categories_list.append(cat)
+
+# Sort them alphabetically so it looks clean and professional
+categories = ['All'] + sorted(clean_categories_list)
 
 selected_category = st.sidebar.selectbox("Select Product Category", categories)
 
