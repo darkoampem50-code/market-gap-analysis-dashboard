@@ -20,38 +20,55 @@ def load_data():
 df = load_data()
 
 # ============================================================
-# 3. SIDEBAR FILTERING TOOLS (CASE-INSENSITIVE SMART MATCH)
+# 3. SIDEBAR FILTERING TOOLS (AUTOMATIC COMPATIBILITY)
 # ============================================================
 st.sidebar.header("Filter Options")
 
-# These are your core presentation-ready options
-categories = [
-    'All',
-    'beverages and beverages preparations',
-    'asian style ready meal',
-    'snacks and confectionery products',
-    'dairy and egg products',
-    'meats and seafood products',
-    'plant-based foods and beverages'
-]
+# We dynamically pull the exact categories directly from your dataset 
+# so there is zero chance of a spelling or capitalization mismatch.
+raw_categories = df['main_category'].dropna().unique().tolist()
+
+# Define the target categories you care about for your presentation
+target_keywords = ['beverages', 'asian style', 'snacks', 'dairy', 'meats', 'plant-based']
+
+# Filter the dataset's categories automatically based on your presentation needs
+presentation_categories = []
+for cat in raw_categories:
+    if any(keyword in str(cat).lower() for keyword in target_keywords):
+        presentation_categories.append(cat)
+
+# Sort them cleanly and add 'All' to the top
+categories = ['All'] + sorted(presentation_categories)
 
 selected_category = st.sidebar.selectbox("Select Product Category", categories)
 
-# Filter dataset dynamically using a case-insensitive keyword match
+# Filter dataset dynamically based on user selection
 if selected_category != 'All':
-    # We take the first two words of your selection (e.g., 'dairy and' or 'asian style')
-    # and search for that text inside the dataset, ignoring capital letters completely.
-    search_keyword = " ".join(selected_category.split()[:2])
-    filtered_df = df[df['main_category'].str.lower().str.contains(search_keyword, na=False)]
+    filtered_df = df[df['main_category'] == selected_category]
 else:
     filtered_df = df
+
+# 4. KPI Metrics Section (STORY 5)
+st.subheader(f"Market Snapshot: {selected_category}")
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    st.metric("Total Products Analyzed", f"{filtered_df.shape[0]:,}")
+with col2:
+    traps_count = filtered_df[filtered_df['market_segment'] == 'Sugar Trap (High Protein, High Sugar)'].shape[0]
+    st.metric("Identified Sugar Traps 🚨", f"{traps_count:,}")
+with col3:
+    goldmine_count = filtered_df[filtered_df['market_segment'] == 'The Market Goldmine (Low Sugar, High Protein)'].shape[0]
+    st.metric("Market Goldmines ✨", f"{goldmine_count:,}")
+
+st.markdown("---")
 
 # ============================================================
 # STORY 4: THE STRATEGIC RECOMMENDATION (KEY INSIGHT BOX)
 # ============================================================
 st.subheader("📋 Strategic Executive Summary")
 
-if selected_category == "asian style ready meal":
+if "asian style" in str(selected_category).lower():
     st.success("""
     **💡 Key Insight & Market Recommendation:**
     Based on the data, the biggest market opportunity is in **asian style ready meal**, 
@@ -86,7 +103,8 @@ with right_chart:
     segment_counts = filtered_df['market_segment'].value_counts()
     
     fig2, ax2 = plt.subplots(figsize=(8, 6))
-    sns.barplot(x=segment_counts.values, y=segment_counts.index, palette='viridis', ax=ax2)
+    if not segment_counts.empty:
+        sns.barplot(x=segment_counts.values, y=segment_counts.index, palette='viridis', ax=ax2)
     ax2.set_xlabel('Count')
     st.pyplot(fig2)
 
@@ -115,8 +133,11 @@ st.markdown("---")
 st.subheader("🚀 Candidate's Choice Feature: Nutritional Efficiency Matrix")
 
 calc_df = filtered_df.copy()
-calc_df['protein_to_sugar_ratio'] = calc_df['proteins_100g'] / (calc_df['sugars_100g'] + 0.1)
-avg_ratio = calc_df['protein_to_sugar_ratio'].mean()
+if not calc_df.empty:
+    calc_df['protein_to_sugar_ratio'] = calc_df['proteins_100g'] / (calc_df['sugars_100g'] + 0.1)
+    avg_ratio = calc_df['protein_to_sugar_ratio'].mean()
+else:
+    avg_ratio = 0.0
 
 st.markdown("""
 This customized metric evaluates the **Protein-to-Sugar Ratio**. It measures exactly how many grams of functional macromolecular protein a consumer receives for every **1 gram of sugar** consumed within this segment.
