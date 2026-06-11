@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-import re
 
 # 1. Page Layout Configuration
 st.set_page_config(page_title="The Market Gap Analysis", layout="wide")
@@ -26,7 +25,6 @@ df = load_data()
 st.sidebar.header("Filter Options")
 
 # We manually list the exact clean categories you want to present
-# This completely eliminates unwanted data rows and keeps it simple
 categories = [
     'All',
     'beverages and beverages preparations',
@@ -41,16 +39,6 @@ if selected_category != 'All':
 else:
     filtered_df = df
 
-# 3. Sort them alphabetically so it's clean for your presentation
-categories = ['All'] + sorted(clean_categories_list)
-
-selected_category = st.sidebar.selectbox("Select Product Category", categories)
-
-# Filter dataset dynamically based on user selection
-if selected_category != 'All':
-    filtered_df = df[df['main_category'] == selected_category]
-else:
-    filtered_df = df
 # 4. KPI Metrics Section (STORY 5)
 st.subheader(f"Market Snapshot: {selected_category}")
 col1, col2, col3 = st.columns(3)
@@ -91,12 +79,10 @@ with left_chart:
     st.subheader("The Positioning Matrix (Sugar vs. Protein Density)")
     fig, ax = plt.subplots(figsize=(8, 6))
     
-    # Dynamic Hexbin plot based on selection
     hb = ax.hexbin(filtered_df['sugars_100g'], filtered_df['proteins_100g'], gridsize=25, cmap='YlOrRd', mincnt=1)
     ax.set_xlabel('Sugars per 100g')
     ax.set_ylabel('Proteins per 100g')
     
-    # Draw thresholds
     ax.axvline(15, color='red', linestyle='--', alpha=0.6)
     ax.axhline(10, color='green', linestyle='--', alpha=0.6)
     
@@ -136,7 +122,6 @@ with col_ing3:
 st.markdown("---")
 st.subheader("🚀 Candidate's Choice Feature: Nutritional Efficiency Matrix")
 
-# Calculate the metric safely on a localized DataFrame state slice
 calc_df = filtered_df.copy()
 calc_df['protein_to_sugar_ratio'] = calc_df['proteins_100g'] / (calc_df['sugars_100g'] + 0.1)
 avg_ratio = calc_df['protein_to_sugar_ratio'].mean()
